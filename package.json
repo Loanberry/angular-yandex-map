@@ -1,6 +1,7 @@
 {
   "name": "yaMap",
   "version": "1.0.4",
+  "main": "ya-map-2.2.min.js",
   "devDependencies": {
     "grunt": "~0.4.1",
     "grunt-contrib-uglify": "~0.2.2"
