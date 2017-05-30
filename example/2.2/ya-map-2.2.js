@@ -191,6 +191,30 @@ angular.module('yaMap',[]).
         };
     }]).
 
+    service('yaOptions', ['templateLayoutFactory', function(templateLayoutFactory) {
+        var templateFields = [
+            'layout',
+            'itemLayout',
+            'clusterBalloonItemContentLayout',
+            'clusterBalloonContentLayout',
+            'balloonLayout',
+            'balloonContentLayout',
+            'iconLayout'
+        ];
+
+        this.get = function(options) {
+            if(options) {
+                for (var key in options) {
+                    if((templateFields.indexOf(key) >= 0) && options.hasOwnProperty(key)) {
+                        options[key] = templateLayoutFactory.get(options[key]);
+                    }
+                }
+            }
+
+            return options;
+        }
+    }]).
+
     directive('yaTemplateLayout',['templateLayoutFactory',function(templateLayoutFactory){
         return{
             restrict:'E',
@@ -379,7 +403,7 @@ angular.module('yaMap',[]).
         };
     }]).
 
-    directive('yaControl',['yaSubscriber','templateLayoutFactory','$parse',function(yaSubscriber,templateLayoutFactory,$parse){
+    directive('yaControl',['yaSubscriber','yaOptions','$parse',function(yaSubscriber,yaOptions,$parse){
         return {
             restrict:'E',
             require:'^yaMap',
@@ -397,12 +421,8 @@ angular.module('yaMap',[]).
                 };
                 var params = getEvalOrValue(attrs.yaParams);
                 var options = attrs.yaOptions ? scope.$eval(attrs.yaOptions) : undefined;
-                if(options && options.layout){
-                    options.layout = templateLayoutFactory.get(options.layout);
-                }
-                if(options && options.itemLayout){
-                    options.itemLayout = templateLayoutFactory.get(options.itemLayout);
-                }
+                options = yaOptions.get(options);
+
                 if(params && params.items){
                     var items = [];
                     var item;
@@ -488,7 +508,7 @@ angular.module('yaMap',[]).
         };
     }]).
 
-    directive('yaCluster',['yaMapSettings','yaSubscriber','$compile','templateLayoutFactory','$parse',function(yaMapSettings,yaSubscriber,$compile,templateLayoutFactory,$parse){
+    directive('yaCluster',['yaMapSettings','yaSubscriber','$compile','yaOptions','$parse',function(yaMapSettings,yaSubscriber,$compile,yaOptions,$parse){
         return {
             require:'^yaMap',
             restrict:'E',
@@ -500,14 +520,8 @@ angular.module('yaMap',[]).
                 tElement.children().remove();
                 return function(scope, element,attrs,yaMap) {
                     var collectionOptions = attrs.yaOptions ? scope.$eval(attrs.yaOptions) : {};
-                    if(collectionOptions && collectionOptions.clusterBalloonItemContentLayout){
-                        collectionOptions.clusterBalloonItemContentLayout =
-                            templateLayoutFactory.get(collectionOptions.clusterBalloonItemContentLayout);
-                    }
-                    if(collectionOptions && collectionOptions.clusterBalloonContentLayout){
-                        collectionOptions.clusterBalloonContentLayout =
-                            templateLayoutFactory.get(collectionOptions.clusterBalloonContentLayout);
-                    }
+                    collectionOptions = yaOptions.get(collectionOptions);
+
                     //включение кластеризации
                     scope.collection = new ymaps.Clusterer(collectionOptions);
                     //подписка на события
@@ -533,7 +547,7 @@ angular.module('yaMap',[]).
         };
     }]).
 
-    directive('yaGeoObject',['GEOMETRY_TYPES','yaSubscriber','templateLayoutFactory','$parse',function(GEOMETRY_TYPES,yaSubscriber,templateLayoutFactory,$parse){
+    directive('yaGeoObject',['GEOMETRY_TYPES','yaSubscriber','yaOptions','$parse',function(GEOMETRY_TYPES,yaSubscriber,yaOptions,$parse){
         return {
             restrict:'E',
             require:['^yaMap','?^yaCollection','?^yaCluster'],
@@ -546,12 +560,8 @@ angular.module('yaMap',[]).
                 var ctrl = ctrls[2] || ctrls[1] || ctrls[0],
                     obj;
                 var options = attrs.yaOptions ? scope.$eval(attrs.yaOptions) : undefined;
-                if(options && options.balloonContentLayout){
-                    options.balloonContentLayout = templateLayoutFactory.get(options.balloonContentLayout);
-                }
-                if(options && options.iconLayout){
-                    options.iconLayout = templateLayoutFactory.get(options.iconLayout);
-                }
+                options = yaOptions.get(options);
+
                 var createGeoObject = function(from, options){
                     obj = new ymaps.GeoObject(from, options);
                     //подписка на события
@@ -674,7 +684,7 @@ angular.module('yaMap',[]).
                 mapApiLoad(function(){
                     options.autoStartElement=elm[0];
                     var obj = new ymaps.util.Dragger(options);
-                    //подписка на события
+                        //подписка на события
                     for(var key in attrs){
                         if(key.indexOf('yaEvent')===0){
                             var parentGet=$parse(attrs[key]);
