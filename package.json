@@ -1,5 +1,5 @@
 {
-  "name": "yaMap",
+  "name": "angular-yandex-map",
   "version": "1.0.4",
   "main": "ya-map-2.2.min.js",
   "devDependencies": {
